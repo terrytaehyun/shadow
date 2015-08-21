@@ -2,6 +2,8 @@
 #include <windows.h>
 #include <iostream>
 
+using namespace std;
+
 UINT generateLeftClick()
 {
 	INPUT newInput = {0};
@@ -28,7 +30,7 @@ POINT getMousePointerLocation()
 	return mousePoint;
 }
 
-UINT setMousePointerLocation()
+UINT setMousePointerLocation(POINT& mousePoint)
 {
 	long displayWidth = GetSystemMetrics(SM_CXSCREEN); // The width of the screen of the PRIMARY monitor in pixel
 	long displayHeight = GetSystemMetrics(SM_CYSCREEN);
@@ -37,22 +39,35 @@ UINT setMousePointerLocation()
 	// When dwFlags is set to MOUSEEVENTF_ABSOLUTE, value stored in dx and dy are normalized to 0 and 65535
 	// 0,0 being the top-left corner and 65535,65535 being the bottom-right corner
 
-	// Calculating how much 1 in normalized field is equivalent in pixel
-	float fdx = displayWidth / 
-	float fdy = displayHeight / 
-	newInput.type = INPUT_MOUSE;
-	newInput.mi.dwFlags = MOUSEEVENTF_ABSOLUTE;
+	// Need to normalize the raw values (by multiplying targetMax / sourceMax)
+	float fdx = mousePoint.x * (65535.0f/displayWidth); //.0f required for more precision
+	float fdy = mousePoint.y * (65535.0f/displayHeight);
 
-	
+	// Preparing to set the mouse point
+	newInput.type = INPUT_MOUSE;
+	newInput.mi.dwFlags = MOUSEEVENTF_ABSOLUTE|MOUSEEVENTF_MOVE;
+	newInput.mi.dx = (long)fdx;
+	newInput.mi.dy = (long)fdy;
+
+	SendInput(1, &newInput, sizeof(INPUT));
 
 
 }
 
 int main ()
 {
+
+	// POINT& mousePoint = new POINT();
+	POINT currentCursorPosition = getMousePointerLocation();
+
+	cout<< "current Position is: (" << currentCursorPosition.x << ", " <<currentCursorPosition.y << ")" <<endl;
+	currentCursorPosition.x = 2107;
+	currentCursorPosition.y = 619;
+
 	while(true)
 	{
-		generateLeftClick();
+		setMousePointerLocation(currentCursorPosition);
+		// generateLeftClick();
 	}
 	return 0;
 }
